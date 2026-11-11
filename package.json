@@ -1,0 +1,55 @@
+{
+  "name": "dsh-fork-anywhere",
+  "version": "0.1.0",
+  "description": "Fork a DeepSeek Harness session at any cut point it can show: a sent user message, or a context-compaction checkpoint. The reply-less Turn the Host closes on a mid-turn cut is hidden instead of shown as a finished turn.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./client": "./src/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "fork",
+    "branch",
+    "session",
+    "user-message"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "check": "node --check src/client.js && node --check src/index.js && npm test"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-chat",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    },
+    "engines": {
+      "dsh": ">=0.2.1-rc.2"
+    }
+  },
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DDDMUC/dsh-fork-anywhere.git"
+  }
+}

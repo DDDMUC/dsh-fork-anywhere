@@ -1,0 +1,14 @@
+# dsh-fork-anywhere bundle patch: inserts the plugin row into the profile roster.
+#
+# The host half is inert: forking is decided by the browser's chat view, so the
+# work lives entirely in the exported "./client" bundle. The row exists because
+# the client-module scanner scans Loader entries for packages declaring
+# `dsh.client`, and so this patch has a row id to insert.
+#
+# The entry name is the BARE package name on purpose: the client-module scanner
+# treats it as a package specifier and resolves `<name>/package.json`, so a
+# subpath entry would be cached as "not a client package" and the browser half
+# would silently never load.
+- insert:
+    - id: dsh-fork-anywhere
+      name: 'dsh-fork-anywhere'
