@@ -1015,6 +1015,31 @@ test('a previously injected button is withdrawn once shipped actions appear', ()
   assert.equal(tail.querySelector('[data-dsfa-dirty="1"]'), null, 'the old button is removed')
 })
 
+test('a disabled shipped branch button is hidden and ours takes its place', () => {
+  const doc = makeEnvironment()
+  const headerRow = makeElement('div', { 'data-chat-flow-key': 'turn-process:3', 'data-chat-flow-kind': 'turn-process' })
+  headerRow.appendChild(makeElement('button', { 'data-turn-process': '3' }))
+  const tail = makeElement('div', { 'data-turn-tail': '3' })
+  const shippedRow = makeElement('div', {}, 'MessageIconActions_module_css__actions')
+  const deadBranch = makeElement('button', { 'aria-label': 'message.branch', 'aria-disabled': 'true', 'data-unavailable': '' })
+  shippedRow.appendChild(deadBranch)
+  tail.appendChild(shippedRow)
+  headerRow.appendChild(tail)
+  doc.flow.appendChild(headerRow)
+
+  const savedDoc = sandbox.document
+  sandbox.document = doc
+  let mounted
+  try {
+    mounted = api.decorateDirtyTurns(doc.flow, [{ turn: 3, seq: 19 }], { t: (k) => k, fork: () => {}, sessionId: 's', doc })
+  } finally {
+    sandbox.document = savedDoc
+  }
+  assert.equal(deadBranch.getAttribute('data-dsfa-hide-shipped'), '1', 'the dead button is hidden')
+  assert.equal(mounted, 1, 'ours is injected so the action stays usable')
+  assert.notEqual(tail.querySelector('[data-dsfa-dirty="1"]'), null)
+})
+
 test('only stopped or interrupted turns count as dirty', () => {
   const entries = [
     { event: { seq: 7, type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } } },
