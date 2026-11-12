@@ -1,6 +1,6 @@
 {
   "name": "dsh-fork-anywhere",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Fork a DeepSeek Harness session at any cut point it can show: a sent user message, or a context-compaction checkpoint. The reply-less Turn the Host closes on a mid-turn cut is hidden instead of shown as a finished turn.",
   "type": "module",
   "main": "src/index.js",

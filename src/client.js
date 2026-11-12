@@ -40,17 +40,14 @@
 //
 // The module is a classic client bundle (client-modules protocol): it registers
 // a factory with `window.__ModuleLoader__` and returns apply().
-const loader = typeof window !== 'undefined' ? window : globalThis
-loader.__ModuleLoader__ = loader.__ModuleLoader__ || { load() {} }
-
-loader.__ModuleLoader__.load({
+window.__ModuleLoader__.load({
   id: 'dsh-fork-anywhere',
   factory: (require) => {
 
     const react = require('react')
 
     const NS = 'dsh-fork-anywhere'
-    const PLUGIN_VERSION = '0.1.0'
+    const PLUGIN_VERSION = '0.1.1'
     /** Own node namespace: only elements carrying it are ever removed (I3). */
     const HOST_ATTR = 'data-dsfa-host'
     const HOST_SELECTOR = '[data-dsfa-host="1"]'
@@ -1119,6 +1116,21 @@ function removeHost(row) {
      * @param sessionId - source session.
      * @param atSeq - inclusive event cut (the prompt's own seq).
      */
+    /**
+     * 容器里是否已有平台自己的操作按钮。
+     *
+     * 平台的 MessageIconActions（复制 / 分支 / 时间）渲染在 div[data-turn-tail]
+     * 里；只要里面有一个不是本插件创建的 button，就说明这一轮平台已经提供了入口。
+     */
+    function hasShippedActions(container) {
+      if (container === null || container === undefined || typeof container.querySelectorAll !== 'function') return false
+      for (const button of [].slice.call(container.querySelectorAll('button'))) {
+        const host = typeof button.closest === 'function' ? button.closest('[' + HOST_ATTR + '="1"]') : null
+        if (host === null || host === undefined) return true
+      }
+      return false
+    }
+
     /** Turns a fork closed with a synthetic `forked` end. */
     function forkedTurnNumbers(sessions, sessionId) {
       const none = []
@@ -1223,6 +1235,12 @@ function removeHost(row) {
         const anchorRow = header === null || header === undefined ? null : closestRow(header)
         let container = null
         if (tail !== null && tail !== undefined) {
+          // 平台自己已经放了一排操作（含分支按钮）时，这一轮不需要第二个入口：
+          // 先把之前注入的收回去，再跳过。
+          if (hasShippedActions(tail)) {
+            for (const mine of [].slice.call(tail.querySelectorAll('[data-dsfa-dirty="1"]'))) mine.remove()
+            continue
+          }
           container = tail
         } else if (anchorRow !== null && anchorRow !== undefined) {
           // No such container: the action becomes its own row strictly BELOW the
@@ -2131,6 +2149,7 @@ function removeHost(row) {
         hideStaleInputs,
         forkedTurnNumbers,
         hideEmptyForkedTurns,
+        hasShippedActions,
         dirtyTurnEnds,
         decorateDirtyTurns,
         usageLabel,

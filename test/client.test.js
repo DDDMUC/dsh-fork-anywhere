@@ -972,6 +972,49 @@ test('without that container the action still lands below the content, never und
   assert.notEqual(row.parentElement, headerRow.parentElement.appendChild, 'not mixed into the header row')
 })
 
+test('a Turn whose tail already holds shipped actions gets no second button', () => {
+  const doc = makeEnvironment()
+  const headerRow = makeElement('div', { 'data-chat-flow-key': 'turn-process:3', 'data-chat-flow-kind': 'turn-process' })
+  headerRow.appendChild(makeElement('button', { 'data-turn-process': '3' }))
+  const tail = makeElement('div', { 'data-turn-tail': '3' })
+  const shippedRow = makeElement('div', {}, 'MessageIconActions_module_css__actions')
+  shippedRow.appendChild(makeElement('button', { 'aria-label': 'message.branch' }))
+  tail.appendChild(shippedRow)
+  headerRow.appendChild(tail)
+  doc.flow.appendChild(headerRow)
+
+  const savedDoc = sandbox.document
+  sandbox.document = doc
+  let mounted
+  try {
+    mounted = api.decorateDirtyTurns(doc.flow, [{ turn: 3, seq: 19 }], { t: (k) => k, fork: () => {}, sessionId: 's', doc })
+  } finally {
+    sandbox.document = savedDoc
+  }
+  assert.equal(mounted, 0, 'the platform already offers the action')
+  assert.equal(tail.querySelector('[data-dsfa-dirty="1"]'), null)
+})
+
+test('a previously injected button is withdrawn once shipped actions appear', () => {
+  const doc = makeEnvironment()
+  const headerRow = makeElement('div', { 'data-chat-flow-key': 'turn-process:3', 'data-chat-flow-kind': 'turn-process' })
+  const tail = makeElement('div', { 'data-turn-tail': '3' })
+  const mine = makeElement('span', { 'data-dsfa-dirty': '1', 'data-dsfa-host': '1' })
+  mine.appendChild(makeElement('button', {}))
+  tail.appendChild(mine)
+  headerRow.appendChild(tail)
+  doc.flow.appendChild(headerRow)
+
+  const savedDoc = sandbox.document
+  sandbox.document = doc
+  try {
+    api.decorateDirtyTurns(doc.flow, [{ turn: 3, seq: 19 }], { t: (k) => k, fork: () => {}, sessionId: 's', doc })
+  } finally {
+    sandbox.document = savedDoc
+  }
+  assert.equal(tail.querySelector('[data-dsfa-dirty="1"]'), null, 'the old button is removed')
+})
+
 test('only stopped or interrupted turns count as dirty', () => {
   const entries = [
     { event: { seq: 7, type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } } },
